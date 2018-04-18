@@ -69,6 +69,31 @@ module Pulsar
       end
     end
 
+    desc 'deploy multi APPLICATIONS ENVIRONMENT', 'Run Capistrano to deploy APPLICATIONS(splited by ,) on ENVIRONMENT'
+    long_desc <<-LONGDESC
+      `pulsar deploy APPLICATION ENVIRONMENT` will generate the configuration for the
+      specified APPLICATION on ENVIRONMENT from the configuration repo and run
+      Capistrano on it.
+    LONGDESC
+    option :conf_repo, aliases: '-c'
+    def deploys(applications, environment)
+      load_config
+      for application in applications.split(",")
+        result = Pulsar::Task.call(
+            repository: load_option_or_env!(:conf_repo),
+            application: application, environment: environment,
+            task: 'deploy'
+        )
+
+        if result.success?
+            puts "Deployed #{application} on #{environment}!"
+        else
+            puts "Failed to deploy #{application} on #{environment}."
+            puts result.error
+        end
+    end
+    end
+
     desc 'task APPLICATION ENVIRONMENT TASK', 'Run Capistrano task for APPLICATION on ENVIRONMENT'
     option :conf_repo, aliases: '-c'
     def task(application, environment, task)
